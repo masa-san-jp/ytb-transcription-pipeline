@@ -19,24 +19,20 @@ class URLStore:
         with self.pending_path.open("r+", encoding="utf-8") as f:
             fcntl.flock(f, fcntl.LOCK_EX)
             lines = f.readlines()
-            urls = []
-            non_url_lines = []
+            next_url: str | None = None
+            remaining_lines = []
             for line in lines:
                 stripped = line.strip()
-                if stripped and not stripped.startswith("#"):
-                    urls.append(stripped)
-                else:
-                    non_url_lines.append(line)
-            if not urls:
+                if next_url is None and stripped and not stripped.startswith("#"):
+                    next_url = stripped
+                    continue
+                remaining_lines.append(line)
+            if next_url is None:
                 return None
-            next_url = urls[0]
-            remaining = urls[1:]
             f.seek(0)
             f.truncate()
-            for line in non_url_lines:
+            for line in remaining_lines:
                 f.write(line)
-            for url in remaining:
-                f.write(url + "\n")
         return next_url
 
     def mark_done(self, url: str) -> None:
