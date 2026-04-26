@@ -58,14 +58,15 @@ class _PendingFileHandler(FileSystemEventHandler):
             return
         self._is_running.set()
         try:
-            self._logger.info("Pipeline 実行開始")
-            self._pipeline.run_all()
-            self._logger.info("Pipeline 実行完了")
+            while True:
+                self._logger.info("Pipeline 実行開始")
+                self._pipeline.run_all()
+                self._logger.info("Pipeline 実行完了")
+                if self._store.count_pending() == 0:
+                    break
+                self._logger.info("残存URLあり — 再実行")
         finally:
             self._is_running.clear()
-            if self._store.count_pending() > 0:
-                self._logger.info("残存URLあり — 再実行")
-                self._try_run()
 
 
 def build_pipeline(watch_dir: Path, output_dir: Path, model: str) -> tuple[Pipeline, URLStore]:

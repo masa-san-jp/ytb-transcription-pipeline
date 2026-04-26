@@ -37,7 +37,11 @@ def print_summary(results: list[PipelineResult]) -> None:
 
 
 def main() -> int:
-    git_pull()
+    try:
+        git_pull()
+    except subprocess.CalledProcessError as e:
+        print(f"git pull 失敗: {e}", file=sys.stderr)
+        return 1
 
     pipeline, store = build_pipeline(
         pending_path=Path("pending_urls.txt"),
