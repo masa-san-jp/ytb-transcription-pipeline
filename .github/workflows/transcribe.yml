@@ -1,0 +1,30 @@
+name: YouTube Transcription
+
+on:
+  push:
+    paths:
+      - 'pending_urls.txt'
+  workflow_dispatch:
+
+jobs:
+  transcribe:
+    runs-on: self-hosted
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run pipeline
+        run: |
+          caffeinate -i python runner/run_and_commit.py
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add processed_urls.txt output/
+          git diff --cached --quiet || git commit -m "chore: transcription results [skip ci]"
+          git push
